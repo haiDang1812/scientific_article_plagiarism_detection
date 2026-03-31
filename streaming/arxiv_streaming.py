@@ -4,7 +4,7 @@ import requests
 import feedparser  
 
 
-JSON_PATH = "papers.json"
+JSON_PATH = "../json/arxiv_json.json"
 SAVE_DIR = "arxiv_papers"
 ARXIV_API = "http://export.arxiv.org/api/query?search_query=all:machine+learning&start=0&max_results=50"
 
@@ -44,13 +44,12 @@ feed = feedparser.parse(ARXIV_API)
 for entry in feed.entries:
 
     #EXTRACT ID
-    # ví dụ: http://arxiv.org/abs/1234.5678v1
     raw_id = entry.id.split("/")[-1]
     arxiv_id = raw_id.split("v")[0]
 
     #CHECK TRÙNG NGAY TẠI STREAM 
     if arxiv_id in existing_ids:
-        print(f"⚡ Skip (exists): {arxiv_id}")
+        print(f" Skip (exists): {arxiv_id}")
         continue
 
     # BUILD PDF URL
@@ -59,7 +58,7 @@ for entry in feed.entries:
     file_name = f"{arxiv_id}.pdf"
     save_path = os.path.join(SAVE_DIR, file_name)
 
-    print(f"⬇️ Downloading: {arxiv_id}")
+    print(f"Downloading: {arxiv_id}")
 
     ok = download_pdf(pdf_url, save_path)
 
@@ -83,4 +82,4 @@ for entry in feed.entries:
     with open(JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(existing_papers, f, indent=4, ensure_ascii=False)
 
-print("✅ Done streaming!")
+print("Done streaming!")
