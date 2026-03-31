@@ -1,0 +1,409 @@
+{
+  "doc_id": "paper_Abdal_3DAvatarGAN_Bridging_Domains_for_Personalized_Editable_Avatars_CVPR_2023_paper_20260331",
+  "title": "3DAvatarGAN: Bridging Domains for Personalized Editable Avatars",
+  "abstract": "Modern 3D-GANs synthesize geometry and texture by training on large-scale datasets with a consistent structure. Training such models on stylized, artistic data, with often unknown, highly variable geometry, and camera information has not yet been shown possible. Can we train a 3D GAN on such artistic data, while maintaining multi-view consistency and texture quality? To this end, we propose an adaptation framework, where the source domain is a pre-trained 3D-GAN, while the target domain is a 2D-GAN trained on artistic datasets. We, then, distill the knowledge from a 2D generator to the source 3D generator. To do that, we first propose an optimization-based method to align the distributions of camera parameters across domains. Second, we propose regularizations necessary to learn high-quality texture, while avoiding degenerate geometric solutions, such as flat shapes. Third, we show a deformation-based technique for modeling exaggerated geometry of artistic domains, enablingÐas a byproductÐ personalized geometric editing. Finally, we propose a novel inversion method for 3D-GANs linking the latent spaces of the source and the target domains. Our contributionsÐfor the first timeÐallow",
+  "sections": [
+    {
+      "section_id": "1",
+      "title": "Preamble",
+      "summary": "<!-- image --> This CVPR paper is the Open Access version, provided by the Computer Vision Foundation. Except for this watermark, it is identical to the accepted version; the final published version of the proceedings is available on IEEE Xplore.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "2",
+      "title": "3DAvatarGAN: Bridging Domains for Personalized Editable Avatars",
+      "summary": "Rameen Abdal ²1 Hsin-Ying Lee 2 Peihao Zhu ²1 Menglei Chai 2 Aliaksandr Siarohin 2 Peter Wonka 1 Sergey Tulyakov 2 1 KAUST 2 Snap Inc. <!-- image --> +Expression + Head Shape +Hair Style Figure 1.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "3",
+      "title": "Abstract",
+      "summary": "Training such models on stylized, artistic data, with often unknown, highly variable geometry, and camera information has not yet been shown possible. Finally, we propose a novel inversion method for 3D-GANs linking the latent spaces of the source and the target domains.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "4",
+      "title": "1. Introduction",
+      "summary": "Training a 3D-GAN on such data becomes problematic due to the challenge of learning such an arbitrary distribution of geometry and texture. To enable the training of 3D-GANs on such challenging datasets, we propose three contributions.",
+      "has_citation": true,
+      "citation_count": 7
+    },
+    {
+      "section_id": "5",
+      "title": "2. Related Work",
+      "summary": "In our work, we build on EG3D [11] which has current state-of-the-art results for human faces trained on the FFHQ dataset. To generate new results in an artistic domain ( e.g .",
+      "has_citation": true,
+      "citation_count": 24
+    },
+    {
+      "section_id": "6",
+      "title": "3. Domain Adaptation for 3D-GANs",
+      "summary": "The goal of domain adaptation for 3D-GANs is to adapt (both texture and geometry) to a particular style defined by a 2D dataset (Caricature, Anime, Pixar toons, Comic, and Cartoons [24, 25, 65] in our case). Note that as T t is not assumed to contain camera parameter annotations, the training scheme must suppress artifacts such as low-quality texture under different views and flat geometry (See Fig.",
+      "has_citation": true,
+      "citation_count": 2
+    },
+    {
+      "section_id": "7",
+      "title": "3.1. How to align the cameras?",
+      "summary": "Assuming that the intrinsic parameters of all the cameras are the same, we aim to match the distribution of extrinsic camera parameters of G s and G 2D and train our final G t using it (see illustration in Fig. Let θ , φ be the camera Euler angles in a spherical coordinate system, r , c be the radius of the sphere and camera lookat point, and, M be a function that converts these parameters into the camera-toworld matrix.",
+      "has_citation": true,
+      "citation_count": 7
+    },
+    {
+      "section_id": "8",
+      "title": "3.2. What loss functions and regularizers to use?",
+      "summary": "In order to preserve the identity as well as geometry such that the optimization of ∆ s does not deviate too far away from the original domain T s , we introduce a regularizer given by <!-- formula-not-decoded --> Note that we apply R(∆ s ) regularization in a lazy manner, i.e ., with density regularization. Finally, regularization is defined as: <!-- formula-not-decoded --> where D t is the depth map of the image I t sampled from G t and J is the matrix of ones having the same spatial dimensions as D t .",
+      "has_citation": true,
+      "citation_count": 3
+    },
+    {
+      "section_id": "9",
+      "title": "3.3. What discriminator to use?",
+      "summary": "Essentially, we use the unconditional version of the dual discriminator proposed in EG3D, and hence, we do not condition the discriminator on the camera information. As a result, during the training, G t generates arbitrary images with pose using M( θ ′ , φ ′ , c ′ , r ′ ) , and the discriminator discriminates these images using arbitrary images from T t .",
+      "has_citation": true,
+      "citation_count": 1
+    },
+    {
+      "section_id": "10",
+      "title": "3.4. How to incorporate larger geometric deformations between domains?",
+      "summary": "To quantify this, we sample images and depth maps from G s and swap the front and the other planes from two random images. Let c I be the initial control points producing an identity transformation, ( c 1 , c 2 ) be the control points corresponding to front planes ( f 1 , f 2 ) sampled using W codes ( w 1 , w 2 ) , respectively, and ( c ′ 1 , c ′ 2 ) be points with ( w 1 , w 2 ) swapped in the TPS module.",
+      "has_citation": true,
+      "citation_count": 2
+    },
+    {
+      "section_id": "11",
+      "title": "4. Personalized Avatar Generation and Editing",
+      "summary": "First, we use an optimizationbased method to find the w code that minimizes the similarity between the generated and the real image in G s . To perform video editing, we design an encoder for EG3D based on e4e [58] to encode videos and transfer the edits from G s to G t based on the w codes [4, 6, 59].",
+      "has_citation": true,
+      "citation_count": 10
+    },
+    {
+      "section_id": "12",
+      "title": "5. Results",
+      "summary": "Không có nội dung để tóm tắt.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "13",
+      "title": "5.1. Quantitative Results",
+      "summary": "To verify the quality of the texture, diversity of samples as well as to some extent, the geometry in the target domain T t , we compare the FID [23] scores using G base and G t in Table 1. Identity preservation score is another important evaluation to check the quality of latent space linking between G s and G t .",
+      "has_citation": true,
+      "citation_count": 3
+    },
+    {
+      "section_id": "14",
+      "title": "5.2. Qualitative Results",
+      "summary": "First, in order to show the quality of domain adaptation, identity preservation, and geometric consistency, in Fig. Since in our method, we encourage the latent regularization to preserve the properties of the latent space learned by the G s generator, in Fig.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "15",
+      "title": "6. Conclusion",
+      "summary": "In the first part, we proposed the first domain adaptation method for 3D-GANs to the best of our knowledge. Second, we introduce a set of regularizers and loss functions that can regularize the fine-tuning of EG3D in such a way that enough of the 3D structure and geometry of the original model is kept, while the distinguishing attributes of the artistic domain, such as textures and colors and local geometric deformations can still be learned.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "16",
+      "title": "References",
+      "summary": "In arXiv , 2021. Ide-3d: Interactive disentangled editing for high-resolution 3d-aware portrait synthesis, 2022.",
+      "has_citation": true,
+      "citation_count": 72
+    }
+  ],
+  "references": [
+    {
+      "ref_id": "1",
+      "raw": "[1] Rameen Abdal, Yipeng Qin, and Peter Wonka. Image2stylegan: How to embed images into the stylegan latent space? In Proceedings of the IEEE/CVF International Conference on Computer Vision , pages 4432±4441, Seoul, Korea, 2019. IEEE. 2, 6"
+    },
+    {
+      "ref_id": "2",
+      "raw": "- [2] Rameen Abdal, Peihao Zhu, John Femiani, Niloy Mitra, and Peter Wonka. Clip2stylegan: Unsupervised extraction of stylegan edit directions. In ACM SIGGRAPH 2022 Conference Proceedings , SIGGRAPH '22, New York, NY, USA, 2022. Association for Computing Machinery. 2"
+    },
+    {
+      "ref_id": "3",
+      "raw": "- [3] Rameen Abdal, Peihao Zhu, Niloy J. Mitra, and Peter Wonka. Styleflow: Attribute-conditioned exploration of stylegan-generated images using conditional continuous normalizing flows. ACM Trans. Graph. , 40(3), may 2021. 2, 3"
+    },
+    {
+      "ref_id": "4",
+      "raw": "- [4] Rameen Abdal, Peihao Zhu, Niloy J. Mitra, and Peter Wonka. Video2stylegan: Disentangling local and global variations in a video, 2022. 6"
+    },
+    {
+      "ref_id": "5",
+      "raw": "- [5] Yuval Alaluf, Or Patashnik, and Daniel Cohen-Or. Restyle: A residual-based stylegan encoder via iterative refinement. In Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV) , October 2021. 2"
+    },
+    {
+      "ref_id": "6",
+      "raw": "- [6] Yuval Alaluf, Or Patashnik, Zongze Wu, Asif Zamir, Eli Shechtman, Dani Lischinski, and Daniel Cohen-Or. Third time's the charm? image and video editing with stylegan3. CoRR , abs/2201.13433, 2022. 6"
+    },
+    {
+      "ref_id": "7",
+      "raw": "- [7] Yuval Alaluf, Omer Tov, Ron Mokady, Rinon Gal, and Amit H. Bermano. Hyperstyle: Stylegan inversion with hypernetworks for real image editing. CoRR , abs/2111.15666, 2021. 2"
+    },
+    {
+      "ref_id": "8",
+      "raw": "- [8] Anonymous. 3d generation on imagenet. In Open Review , 2023. 3"
+    },
+    {
+      "ref_id": "9",
+      "raw": "- [9] Jonathan T Barron, Ben Mildenhall, Matthew Tancik, Peter Hedman, Ricardo Martin-Brualla, and Pratul P Srinivasan. Mip-nerf: A multiscale representation for anti-aliasing neural radiance fields. In Proceedings of the IEEE/CVF International Conference on Computer Vision , pages 5855±5864, 2021. 2"
+    },
+    {
+      "ref_id": "10",
+      "raw": "- [10] Eric R. Chan, Connor Z. Lin, Matthew A. Chan, Koki Nagano, Boxiao Pan, Shalini De Mello, Orazio Gallo, Leonidas Guibas, Jonathan Tremblay, Sameh Khamis, Tero Karras, and Gordon Wetzstein. Efficient geometry-aware 3D generative adversarial networks. In arXiv , 2021. 1, 2, 3"
+    },
+    {
+      "ref_id": "11",
+      "raw": "- [11] Eric R. Chan, Connor Z. Lin, Matthew A. Chan, Koki Nagano, Boxiao Pan, Shalini De Mello, Orazio Gallo, Leonidas Guibas, Jonathan Tremblay, Sameh Khamis, Tero Karras, and Gordon Wetzstein. Efficient geometry-aware 3d generative adversarial networks, 2021. 2, 4"
+    },
+    {
+      "ref_id": "12",
+      "raw": "- [12] Eric R Chan, Marco Monteiro, Petr Kellnhofer, Jiajun Wu, and Gordon Wetzstein. pi-gan: Periodic implicit generative adversarial networks for 3d-aware image synthesis. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 5799±5809, 2021. 2"
+    },
+    {
+      "ref_id": "13",
+      "raw": "- [13] Yen-Chi Cheng, Chieh Hubert Lin, Hsin-Ying Lee, Jian Ren, Sergey Tulyakov, and Ming-Hsuan Yang. Inout: Diverse image outpainting via gan inversion. In IEEE Conference on Computer Vision and Pattern Recognition , 2022. 2"
+    },
+    {
+      "ref_id": "14",
+      "raw": "- [14] Yunjey Choi, Youngjung Uh, Jaejun Yoo, and Jung-Woo Ha. Stargan v2: Diverse image synthesis for multiple domains. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition , 2020. 2"
+    },
+    {
+      "ref_id": "15",
+      "raw": "- [15] Min Jin Chong and David A. Forsyth. Jojogan: One shot face stylization. CoRR , abs/2112.11641, 2021. 2"
+    },
+    {
+      "ref_id": "16",
+      "raw": "- [16] Min Jin Chong, Hsin-Ying Lee, and David Forsyth. Stylegan of all trades: Image manipulation with only pretrained stylegan. arXiv preprint arXiv:2111.01619 , 2021. 2"
+    },
+    {
+      "ref_id": "17",
+      "raw": "- [17] Rinon Gal, Or Patashnik, Haggai Maron, Gal Chechik, and Daniel Cohen-Or. Stylegan-nada: Clip-guided domain adaptation of image generators. arXiv preprint arXiv:2108.00946 , 2021. 2"
+    },
+    {
+      "ref_id": "18",
+      "raw": "- [18] Rinon Gal, Or Patashnik, Haggai Maron, Gal Chechik, and Daniel Cohen-Or. Stylegan-nada: Clip-guided domain adaptation of image generators, 2021. 2"
+    },
+    {
+      "ref_id": "19",
+      "raw": "- [19] Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio. Generative adversarial networks, 2014. 2"
+    },
+    {
+      "ref_id": "20",
+      "raw": "- [20] Jiatao Gu, Lingjie Liu, Peng Wang, and Christian Theobalt. Stylenerf: A style-based 3d aware generator for highresolution image synthesis. In International Conference on Learning Representations , 2022. 2"
+    },
+    {
+      "ref_id": "21",
+      "raw": "- [21] Fangzhou Han, Shuquan Ye, Mingming He, Menglei Chai, and Jing Liao. Exemplar-based 3d portrait stylization. IEEE Transactions on Visualization and Computer Graphics , 2021. 2"
+    },
+    {
+      "ref_id": "22",
+      "raw": "- [22] Erik HÈ arkÈ onen, Aaron Hertzmann, Jaakko Lehtinen, and Sylvain Paris. Ganspace: Discovering interpretable gan controls. arXiv preprint arXiv:2004.02546 , 2020. 2, 6"
+    },
+    {
+      "ref_id": "23",
+      "raw": "- [23] Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter. Gans trained by a two time-scale update rule converge to a local nash equilibrium. Advances in neural information processing systems , 30, 2017. 6"
+    },
+    {
+      "ref_id": "24",
+      "raw": "- [24] Jing Huo, Wenbin Li, Yinghuan Shi, Yang Gao, and Hujun Yin. Webcaricature: a benchmark for caricature recognition. In British Machine Vision Conference , 2018. 3, 6, 7"
+    },
+    {
+      "ref_id": "25",
+      "raw": "- [25] Wonjong Jang, Gwangjin Ju, Yucheol Jung, Jiaolong Yang, Xin Tong, and Seungyong Lee. Stylecarigan: Caricature generation via stylegan feature map modulation. 40(4), 2021. 2, 3, 6, 7"
+    },
+    {
+      "ref_id": "26",
+      "raw": "- [26] Yucheol Jung, Wonjong Jang, Soongjin Kim, Jiaolong Yang, Xin Tong, and Seungyong Lee. Deep deformable 3d caricatures with learned shape control. In Special Interest Group on Computer Graphics and Interactive Techniques Conference Proceedings . ACM, aug 2022. 2"
+    },
+    {
+      "ref_id": "27",
+      "raw": "- [27] Tero Karras, Timo Aila, Samuli Laine, and Jaakko Lehtinen. Progressive growing of gans for improved quality, stability, and variation, 2017. 2"
+    },
+    {
+      "ref_id": "28",
+      "raw": "- [28] Tero Karras, Miika Aittala, Janne Hellsten, Samuli Laine, Jaakko Lehtinen, and Timo Aila. Training generative adversarial networks with limited data. In Proc. NeurIPS , 2020. 1, 2, 5, 6"
+    },
+    {
+      "ref_id": "29",
+      "raw": "- [29] Tero Karras, Miika Aittala, Janne Hellsten, Samuli Laine, Jaakko Lehtinen, and Timo Aila. Training generative adversarial networks with limited data. arXiv preprint arXiv:2006.06676 , 2020. 3"
+    },
+    {
+      "ref_id": "30",
+      "raw": "- [30] Tero Karras, Miika Aittala, Samuli Laine, Erik HÈ arkÈ onen, Janne Hellsten, Jaakko Lehtinen, and Timo Aila. Alias-free generative adversarial networks, 2021. 1, 2"
+    },
+    {
+      "ref_id": "31",
+      "raw": "- [31] Tero Karras, Samuli Laine, and Timo Aila. A style-based generator architecture for generative adversarial networks. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 4401±4410, 2019. 1, 3"
+    },
+    {
+      "ref_id": "32",
+      "raw": "- [32] Tero Karras, Samuli Laine, and Timo Aila. A Style-Based generator architecture for generative adversarial networks. IEEE transactions on pattern analysis and machine intelligence , 43(12):4217±4228, Dec. 2021. 2"
+    },
+    {
+      "ref_id": "33",
+      "raw": "- [33] Tero Karras, Samuli Laine, Miika Aittala, Janne Hellsten, Jaakko Lehtinen, and Timo Aila. Analyzing and improving the image quality of StyleGAN. In Proc. CVPR , 2020. 2"
+    },
+    {
+      "ref_id": "34",
+      "raw": "- [34] Cheng-Han Lee, Ziwei Liu, Lingyun Wu, and Ping Luo. Maskgan: Towards diverse and interactive facial image manipulation. In IEEE Conference on Computer Vision and Pattern Recognition (CVPR) , 2020. 4, 5"
+    },
+    {
+      "ref_id": "35",
+      "raw": "- [35] Thomas LeimkÈ uhler and George Drettakis. Freestylegan: Free-view editable portrait rendering with the camera manifold. 40(6), 2021. 3"
+    },
+    {
+      "ref_id": "36",
+      "raw": "- [36] Chieh Hubert Lin, Hsin-Ying Lee, Yen-Chi Cheng, Sergey Tulyakov, and Ming-Hsuan Yang. Infinitygan: Towards infinite-pixel image synthesis. In International Conference on Learning Representations (ICLR) , 2022. 2"
+    },
+    {
+      "ref_id": "37",
+      "raw": "- [37] Ben Mildenhall, Pratul P Srinivasan, Matthew Tancik, Jonathan T Barron, Ravi Ramamoorthi, and Ren Ng. Nerf: Representing scenes as neural radiance fields for view synthesis. In European conference on computer vision , pages 405±421. Springer, 2020. 2"
+    },
+    {
+      "ref_id": "38",
+      "raw": "- [38] Sangwoo Mo, Minsu Cho, and Jinwoo Shin. Freeze the discriminator: a simple baseline for fine-tuning gans, 2020. 2"
+    },
+    {
+      "ref_id": "39",
+      "raw": "- [39] Michael Niemeyer and Andreas Geiger. Campari: Cameraaware decomposed generative neural radiance fields. In 2021 International Conference on 3D Vision (3DV) , pages 951± 961. IEEE, 2021. 2"
+    },
+    {
+      "ref_id": "40",
+      "raw": "- [40] Michael Niemeyer and Andreas Geiger. Giraffe: Representing scenes as compositional generative neural feature fields. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 11453±11464, 2021. 2"
+    },
+    {
+      "ref_id": "41",
+      "raw": "- [41] Roy Or-El, Xuan Luo, Mengyi Shan, Eli Shechtman, Jeong Joon Park, and Ira Kemelmacher-Shlizerman. StyleSDF: High-Resolution 3D-Consistent Image and Geometry Generation. arXiv preprint arXiv:2112.11427 , 2021. 1, 2"
+    },
+    {
+      "ref_id": "42",
+      "raw": "- [42] Xingang Pan, Bo Dai, Ziwei Liu, Chen Change Loy, and Ping Luo. Do 2d gans know 3d shape? unsupervised 3d shape reconstruction from 2d image gans. arXiv preprint arXiv:2011.00844 , 2020. 2"
+    },
+    {
+      "ref_id": "43",
+      "raw": "- [43] Keunhong Park, Utkarsh Sinha, Jonathan T Barron, Sofien Bouaziz, Dan B Goldman, Steven M Seitz, and Ricardo Martin-Brualla. Deformable neural radiance fields. arXiv preprint arXiv:2011.12948 , 2020. 2"
+    },
+    {
+      "ref_id": "44",
+      "raw": "- [44] Or Patashnik, Zongze Wu, Eli Shechtman, Daniel Cohen-Or, and Dani Lischinski. Styleclip: Text-driven manipulation of stylegan imagery, 2021. 2"
+    },
+    {
+      "ref_id": "45",
+      "raw": "- [45] Justin N. M. Pinkney and Doron Adler. Resolution dependent gan interpolation for controllable image synthesis between domains, 2020. 2, 3"
+    },
+    {
+      "ref_id": "46",
+      "raw": "- [46] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sutskever. Learning transferable visual models from natural language supervision. CoRR , abs/2103.00020, 2021. 2"
+    },
+    {
+      "ref_id": "47",
+      "raw": "- [47] Alec Radford, Luke Metz, and Soumith Chintala. Unsupervised representation learning with deep convolutional generative adversarial networks, 2015. 2"
+    },
+    {
+      "ref_id": "48",
+      "raw": "- [48] Elad Richardson, Yuval Alaluf, Or Patashnik, Yotam Nitzan, Yaniv Azar, Stav Shapiro, and Daniel Cohen-Or. Encoding in style: a stylegan encoder for image-to-image translation. arXiv preprint arXiv:2008.00951 , 2020. 2"
+    },
+    {
+      "ref_id": "49",
+      "raw": "- [49] Daniel Roich, Ron Mokady, Amit H Bermano, and Daniel Cohen-Or. Pivotal tuning for latent-based editing of real images. arXiv preprint arXiv:2106.05744 , 2021. 2"
+    },
+    {
+      "ref_id": "50",
+      "raw": "- [50] Katja Schwarz, Yiyi Liao, Michael Niemeyer, and Andreas Geiger. Graf: Generative radiance fields for 3d-aware image synthesis. In Advances in Neural Information Processing Systems (NeurIPS) , 2020. 2"
+    },
+    {
+      "ref_id": "51",
+      "raw": "- [51] Yujun Shen, Ceyuan Yang, Xiaoou Tang, and Bolei Zhou. Interfacegan: Interpreting the disentangled face representation learned by gans. IEEE Transactions on Pattern Analysis and Machine Intelligence , 2020. 2, 6"
+    },
+    {
+      "ref_id": "52",
+      "raw": "- [52] Yichun Shi, Divyansh Aggarwal, and Anil K Jain. Lifting 2d stylegan for 3d-aware face generation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 6258±6266, 2021. 2"
+    },
+    {
+      "ref_id": "53",
+      "raw": "- [53] Ivan Skorokhodov, Aliaksandr Siarohin, Yinghao Xu, Jian Ren, Hsin-Ying Lee, Peter Wonka, and Sergey Tulyakov. 3d generation on imagenet. In International Conference on Learning Representations (ICLR) , 2023. 2"
+    },
+    {
+      "ref_id": "54",
+      "raw": "- [54] Guoxian Song, Linjie Luo, Jing Liu, Wan-Chun Ma, Chunpong Lai, Chuanxia Zheng, and Tat-Jen Cham. Agilegan: Stylizing portraits by inversion-consistent transfer learning. ACM Trans. Graph. , 40(4), jul 2021. 2"
+    },
+    {
+      "ref_id": "55",
+      "raw": "- [55] Jingxiang Sun, Xuan Wang, Yichun Shi, Lizhen Wang, Jue Wang, and Yebin Liu. Ide-3d: Interactive disentangled editing for high-resolution 3d-aware portrait synthesis, 2022. 1, 2"
+    },
+    {
+      "ref_id": "56",
+      "raw": "- [56] Ayush Tewari, Mohamed Elgharib, Gaurav Bharaj, Florian Bernard, Hans-Peter Seidel, Patrick PÂ erez, Michael Zollhofer, and Christian Theobalt. Stylerig: Rigging stylegan for 3d control over portrait images. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 6142±6151, 2020. 2"
+    },
+    {
+      "ref_id": "57",
+      "raw": "- [57] Ayush Tewari, Mohamed Elgharib, Mallikarjun BR, Florian Bernard, Hans-Peter Seidel, Patrick PÂ erez, Michael ZÈ ollhofer, and Christian Theobalt. Pie: Portrait image embedding for semantic control. volume 39, December 2020. 2"
+    },
+    {
+      "ref_id": "58",
+      "raw": "- [58] Omer Tov, Yuval Alaluf, Yotam Nitzan, Or Patashnik, and Daniel Cohen-Or. Designing an encoder for stylegan image manipulation. arXiv preprint arXiv:2102.02766 , 2021. 2, 6"
+    },
+    {
+      "ref_id": "59",
+      "raw": "- [59] Rotem Tzaban, Ron Mokady, Rinon Gal, Amit H. Bermano, and Daniel Cohen-Or. Stitch it in time: Gan-based facial editing of real videos. CoRR , abs/2201.08361, 2022. 6"
+    },
+    {
+      "ref_id": "60",
+      "raw": "- [60] Can Wang, Menglei Chai, Mingming He, Dongdong Chen, and Jing Liao. Cross-domain and disentangled face manipulation with 3d guidance. IEEE Transactions on Visualization and Computer Graphics , 2022. 2"
+    },
+    {
+      "ref_id": "61",
+      "raw": "- [61] WarBean. tps-stn-pytorch. https://github.com/ WarBean/tps\\_stn\\_pytorch . 5"
+    },
+    {
+      "ref_id": "62",
+      "raw": "- [62] Zongze Wu, Dani Lischinski, and Eli Shechtman. Stylespace analysis: Disentangled controls for stylegan image generation. arXiv preprint arXiv:2011.12799 , 2020. 2, 4, 6"
+    },
+    {
+      "ref_id": "63",
+      "raw": "- [63] Yinghao Xu, Menglei Chai, Zifan Shi, Sida Peng, Ivan Skorokhodov, Aliaksandr Siarohin, Ceyuan Yang, Yujun Shen, Hsin-Ying Lee, Bolei Zhou, et al. Discoscene: Spatially disentangled generative radiance fields for controllable 3daware scene synthesis. In IEEE Conference on Computer Vision and Pattern Recognition , 2023. 2"
+    },
+    {
+      "ref_id": "64",
+      "raw": "- [64] Yinghao Xu, Sida Peng, Ceyuan Yang, Yujun Shen, and Bolei Zhou. 3d-aware image synthesis via learning structural and textural representations. arXiv preprint arXiv:2112.10759 , 2021. 1, 2"
+    },
+    {
+      "ref_id": "65",
+      "raw": "- [65] Shuai Yang, Liming Jiang, Ziwei Liu, and Chen Change Loy. Pastiche master: Exemplar-based high-resolution portrait style transfer. In CVPR , 2022. 2, 3"
+    },
+    {
+      "ref_id": "66",
+      "raw": "- [66] Zipeng Ye, Mengfei Xia, Yanan Sun, Ran Yi, Minjing Yu, Juyong Zhang, Yu-Kun Lai, and Yong-Jin Liu. 3d-CariGAN: An end-to-end solution to 3d caricature generation from normal face photos. IEEE Transactions on Visualization and Computer Graphics , pages 1±1, 2021. 2"
+    },
+    {
+      "ref_id": "67",
+      "raw": "- [67] Fisher Yu, Yinda Zhang, Shuran Song, Ari Seff, and Jianxiong Xiao. Lsun: Construction of a large-scale image dataset using deep learning with humans in the loop. arXiv preprint arXiv:1506.03365 , 2015. 2"
+    },
+    {
+      "ref_id": "68",
+      "raw": "- [68] Kai Zhang, Gernot Riegler, Noah Snavely, and Vladlen Koltun. Nerf++: Analyzing and improving neural radiance fields. arXiv preprint arXiv:2010.07492 , 2020. 2"
+    },
+    {
+      "ref_id": "69",
+      "raw": "- [69] Jiapeng Zhu, Yujun Shen, Deli Zhao, and Bolei Zhou. Indomain gan inversion for real image editing. In European Conference on Computer Vision , pages 592±608. Springer, 2020. 2"
+    },
+    {
+      "ref_id": "70",
+      "raw": "- [70] Peihao Zhu, Rameen Abdal, John Femiani, and Peter Wonka. Mind the gap: Domain gap control for single shot domain adaptation for generative adversarial networks. In International Conference on Learning Representations , 2022. 2"
+    },
+    {
+      "ref_id": "71",
+      "raw": "- [71] Peihao Zhu, Rameen Abdal, Yipeng Qin, John Femiani, and Peter Wonka. Improved stylegan embedding: Where are the good latents?, 2020. 2"
+    },
+    {
+      "ref_id": "72",
+      "raw": "- [72] zllrunning. face-parsing.pytorch. https://github. com/zllrunning/face-parsing.PyTorch . 2, 3"
+    }
+  ]
+}
