@@ -1,0 +1,503 @@
+{
+  "doc_id": "paper_Abbasi_BrainWash_A_Poisoning_Attack_to_Forget_in_Continual_Learning_CVPR_2024_paper_20260331",
+  "title": "BrainWash: A Poisoning Attack to Forget in Continual Learning",
+  "abstract": "Continual learning has gained substantial attention within the deep learning community, offering promising solutions to the challenging problem of sequential learning. Yet, a largely unexplored facet of this paradigm is its susceptibility to adversarial attacks, especially with the aim of inducing forgetting. In this paper, we introduce 'BrainWash,' a novel data poisoning method tailored to impose forgetting on a continual learner. By adding the BrainWash noise to a variety of baselines, we demonstrate how a trained continual learner can be induced to forget its previously learned tasks catastrophically, even when using these continual learning baselines. An important feature of our approach is that the attacker requires no access to previous tasks' data and is armed merely with the model's current parameters and the data belonging to the most recent task. Our extensive experiments highlight the efficacy of BrainWash, showcasing degradation in performance across various regularization and memory replaybased continual learning methods. Our code is available here: https://github.com/mint-vu/Brainwash",
+  "sections": [
+    {
+      "section_id": "1",
+      "title": "Preamble",
+      "summary": "<!-- image --> This CVPR paper is the Open Access version, provided by the Computer Vision Foundation. Except for this watermark, it is identical to the accepted version; the final published version of the proceedings is available on IEEE Xplore.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "2",
+      "title": "BrainWash: A Poisoning Attack to Forget in Continual Learning",
+      "summary": "Không có nội dung để tóm tắt.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "3",
+      "title": "Ali Abbasi Vanderbilt University",
+      "summary": "ali.abbasi@vanderbilt.edu",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "4",
+      "title": "Abstract",
+      "summary": "Continual learning has gained substantial attention within the deep learning community, offering promising solutions to the challenging problem of sequential learning. In this paper, we introduce 'BrainWash,' a novel data poisoning method tailored to impose forgetting on a continual learner.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "5",
+      "title": "1. Introduction",
+      "summary": "In real-world scenarios, data distributions are inherently non-stationary, constantly evolving and shifting in unpredictable ways. Such variability poses a significant challenge to machine learning and computer vision, where model generalizability assumes stationary training and testing/deployment distributions.",
+      "has_citation": true,
+      "citation_count": 1
+    },
+    {
+      "section_id": "6",
+      "title": "Parsa Nooralinejad University of California, Davis",
+      "summary": "pnoorali@ucdavis.edu",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "7",
+      "title": "Soheil Kolouri Vanderbilt University",
+      "summary": "In our proposed threat model, the attacker gains access to the CL model and the data for the forthcoming task but remains unaware of the data from preceding tasks and the specific CL method employed by the victim (top panel). Second, to poison the current task, we construct a bi-level optimization problem such that: 1) the performance on inverted data of previous tasks is minimized, and 2) the performance on the clean data of the current task is maximized.",
+      "has_citation": true,
+      "citation_count": 7
+    },
+    {
+      "section_id": "8",
+      "title": "2. Related Work",
+      "summary": "To tackle catastrophic forgetting, strategies in continual learning are typically grouped into three main categories: 1) memory-based methods, 2) regularization-based methods, and 3) architectural methods. Data Poisoning is a training phase attack on a ML model in which the attacker deliberately alters the victim's training data maliciously [4, 8, 20, 26, 31, 55, 70].",
+      "has_citation": true,
+      "citation_count": 22
+    },
+    {
+      "section_id": "9",
+      "title": "3. Threat model",
+      "summary": "We consider a victim using a regularization or memorybased CL method to learn a series of tasks. For example, imagine a home robot that continuously learns from its environment to adapt to a new home [10].",
+      "has_citation": true,
+      "citation_count": 1
+    },
+    {
+      "section_id": "10",
+      "title": "4. Method",
+      "summary": "We assume the attacker has full access to the model and data from the latest task the continual learner will encounter. Using the victim's model, the inverted data from previous tasks, and the data for the current task, the attacker formalizes the poisoning problem through a bi-level optimization and then solves it via a first-order approximation method.",
+      "has_citation": true,
+      "citation_count": 1
+    },
+    {
+      "section_id": "11",
+      "title": "4.1. Notations",
+      "summary": "We denote the training data for task t ∈ { 1 , · · · , T } as D t = { ( x i t , y i t ) } N t i =1 ⊂ X × Y t , where x i t ∈ X denotes the i 'th sample from the t 'th task (e.g., an input image) and y i t ∈ Y t = { 1 , · · · , K t } denotes its corresponding label with K t and N t denoting the number of classes and examples for task t respectively. For instance, ψ ∗ t represents the optimal parameters for the t th head, while θ ∗ 1: T -1 denotes the optimal parameters of the backbone after learning tasks 1 to T -1 , all calculated on the clean data.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "12",
+      "title": "4.2. Model Inversion",
+      "summary": "The outcome of this attack is proxy datasets for the previous tasks denoted as ˆ D t = { (ˆ x i t , ˆ y i t ) } i M =1 , where ˆ x i t is an inverted sample corresponding to label ˆ y i t . Following [68], we formulate the MI for a set of randomly sampled target one-hot labels { ˆ y i t ∈ Y t } i M =1 as: <!-- formula-not-decoded --> where R prior is an image regularization term that acts as a weak prior for natural images [45], and R feat is a featurestatistics regularization [68].",
+      "has_citation": true,
+      "citation_count": 4
+    },
+    {
+      "section_id": "13",
+      "title": "4.3. Poisoning Formulation",
+      "summary": "The attacker constructs additive noise to the data from task T , such that when the victim trains their model on this task, the performance on tasks 1 to T -1 plummets. The bi-level optimization in (4) solely focuses on maximizing forgetting on tasks 1 through T -1 , even at the cost of not learning task T , i.e., the 'reckless threat model.'",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "14",
+      "title": "4.4. First-Order Approximation",
+      "summary": "To address this, we follow [29] and leverage a first-order method that approximates the bilevel optimization problem using meta-learning [22]. In other words, the outer backpropagation is only performed through the inner optimization's k unrolled SGD steps.",
+      "has_citation": true,
+      "citation_count": 4
+    },
+    {
+      "section_id": "15",
+      "title": "5. Experiments",
+      "summary": "This section provides experimental results evaluating our attack on various CL algorithms on three benchmark datasets.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "16",
+      "title": "5.1. Datasets and Model",
+      "summary": "- 10-Split miniImagenet: we also evaluated our noise on miniImageNet[62] which is a dataset of 60,000 84 × 84 images, divided in 100 categories. - 20-Split tinyImagenet: As our large-scale benchmark, we used the 20-split tinyImageNet[38], which is a dataset of 200 classes with 100,000 images in total, each with the size of 64 × 64 .",
+      "has_citation": true,
+      "citation_count": 4
+    },
+    {
+      "section_id": "17",
+      "title": "5.2. Regularization-Based CL Methods",
+      "summary": "In our experiments, we consider five renowned regularization-based methods starting from the classic Elastic Weight Consolidation (EWC) [34], Memory Aware Synapsis (MAS) [5], and Riemannian Walk (RWALK), to more recent methods like Active Forgetting of Negative Transfer (AFEC) [65] and Auxiliary Networks in Continual Learning (ANCL) [33]. Generally, the regularizationbased CL methods assign importance values to network parameters and penalize the training for drastic changes in the important parameters.",
+      "has_citation": true,
+      "citation_count": 4
+    },
+    {
+      "section_id": "18",
+      "title": "5.3. Evaluation Metrics",
+      "summary": "We use the Backward Transfer (BWT) [41] and the (poisoned) model's accuracy on the last task for our evaluation metric. For the sake of completion, let A t,i denote the performance of the CL model on task i after learning task t ≥ i .",
+      "has_citation": true,
+      "citation_count": 1
+    },
+    {
+      "section_id": "19",
+      "title": "5.4. Experiment Setup",
+      "summary": "For comparative analysis, we also include the BWT and accuracy of the victim models trained on the unpoisoned version of task T and on task T with added uniform noise. The backward transfer (BWT) and accuracy (Acc) for training different CL methods on the benchmark datasets when the last task is 'clean' and when it is poisoned with BrainWash for ϵ ∈ { 0 .",
+      "has_citation": true,
+      "citation_count": 21
+    },
+    {
+      "section_id": "20",
+      "title": "5.5. Replay-based CL Methods",
+      "summary": "We also explored the effectiveness of BrainWash on replaybased CL methods, specifically ER [16] and ER-ACE [14] with a single head network and a memory buffer size of 1000 . BrainWash against single-head replay-based CL methods.",
+      "has_citation": true,
+      "citation_count": 4
+    },
+    {
+      "section_id": "21",
+      "title": "5.6. Data Poisoning Baselines",
+      "summary": "This assessment used a task incremental setting on 10-split CIFAR100 with EWC and the backward transfer and the accuracy of the last task are detailed in Table 3. <!-- image --> Figure 4.",
+      "has_citation": true,
+      "citation_count": 4
+    },
+    {
+      "section_id": "22",
+      "title": "6. Abaltion Studies",
+      "summary": "We performed various ablation studies to evaluate the sensitivity of BrainWash to different design choices. Please note that throughout the ablation experiments, we use the term 'forgetting' , corresponding to the negative of BWT.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "23",
+      "title": "6.1. Sensitivity to λ",
+      "summary": "It's important to note that the degree of induced forgetting and the overall performance of the victim is significantly influenced by the value of λ . Also, there is a notion that increasing the network's stability (i.e., opting for higher values of λ ) might act as an effective defense against BrainWash, under the assumption that the lesser the amount of 'bad data' learned by the victim, the lower the level of forgetting.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "24",
+      "title": "6.2. Dependency on Injection Rate and Noise Norm",
+      "summary": "To delve deeper into the dynamics of BrainWash, we assessed its impact by varying the noise injection rate (the percentage of data that is poisoned) and the noise magnitude. It's important to note that poisoning the entire task equates to a 20% injection rate (since one out of the five tasks is poisoned), and poisoning 10% of the last task corresponds to a 2% injection ratio.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "25",
+      "title": "6.3. The Effect of Model Inversion",
+      "summary": "As previously mentioned, we considered a scenario where the attacker might not have access to data from previous tasks. To address this, we suggested using model inversion, employing inverted samples as proxies.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "26",
+      "title": "6.4. Different Task Lengths",
+      "summary": "The results, depicted in Table 5, confirm that BrainWash effectively induces forgetting at different training stages of the continual learner. For instance, at task 10, BrainWash has an injection rate of 10% (being applied to one out of ten tasks).",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "27",
+      "title": "6.5. Efficacy on Different Architectures",
+      "summary": "To show the independence of BrainWash to the architecture, we repeat the 10-split CIFAR-100 experiment with the RegNetX [17] on ANCL, and report the results in Table 6. Table 6.",
+      "has_citation": true,
+      "citation_count": 2
+    },
+    {
+      "section_id": "28",
+      "title": "7. Conclusion",
+      "summary": "Both threat models assume that the attacker can only access the trained model and the clean data from the last task. In our extensive experiments, we employed five wellknown continual learning methods and three benchmark datasets to demonstrate the efficacy of BrainWash as a potent poisoning attack.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "29",
+      "title": "Acknowledgement",
+      "summary": "The authors thank Oracle Cloud Infrastructure (OCI) for generously providing computational resources for this study. This work was partially supported by the Defense Advanced Research Projects Agency (DARPA) under Contract No.",
+      "has_citation": false,
+      "citation_count": 0
+    },
+    {
+      "section_id": "30",
+      "title": "References",
+      "summary": "In International conference on machine learning , pages 448-456. pmlr, 2015. 3 - [49] David Rolnick, Arun Ahuja, Jonathan Schwarz, Timothy Lillicrap, and Gregory Wayne.",
+      "has_citation": true,
+      "citation_count": 70
+    }
+  ],
+  "references": [
+    {
+      "ref_id": "1",
+      "raw": "[1] Lifelong Learning with Sketched Structural Regularization , 2021. PMLR. 2"
+    },
+    {
+      "ref_id": "2",
+      "raw": "- [2] Ali Abbasi, Parsa Nooralinejad, Vladimir Braverman, Hamed Pirsiavash, and Soheil Kolouri. Sparsity and heterogeneous dropout for continual learning in the null space of neural activations. In Conference on Lifelong Learning Agents , pages 617-628. PMLR, 2022. 2"
+    },
+    {
+      "ref_id": "3",
+      "raw": "- [3] Ali Abbasi, Chayne Thrash, Elaheh Akbari, Daniel Zhang, and Soheil Kolouri. Covarnav: Machine unlearning via model inversion and covariance navigation. arXiv preprint arXiv:2311.12999 , 2023. 1"
+    },
+    {
+      "ref_id": "4",
+      "raw": "- [4] Scott Alfeld, Xiaojin Zhu, and Paul Barford. Data poisoning attacks against autoregressive models. In Proceedings of the AAAI Conference on Artificial Intelligence , 2016. 3"
+    },
+    {
+      "ref_id": "5",
+      "raw": "- [5] Rahaf Aljundi, Francesca Babiloni, Mohamed Elhoseiny, Marcus Rohrbach, and Tinne Tuytelaars. Memory aware synapses: Learning what (not) to forget. In ECCV , 2018. 2, 5, 6"
+    },
+    {
+      "ref_id": "6",
+      "raw": "- [6] Jonathan F Bard and James E Falk. An explicit solution to the multi-level programming problem. Computers &amp; Operations Research , 9(1):77-100, 1982. 3"
+    },
+    {
+      "ref_id": "7",
+      "raw": "- [7] Eseoghene Ben-Iwhiwhu, Saptarshi Nath, Praveen Kumar Pilly, Soheil Kolouri, and Andrea Soltoggio. Lifelong reinforcement learning with modulating masks. Transactions on Machine Learning Research , 2023. 2"
+    },
+    {
+      "ref_id": "8",
+      "raw": "- [8] Battista Biggio, Blaine Nelson, and Pavel Laskov. Poisoning attacks against support vector machines. In Proceedings of the 29th International Coference on International Conference on Machine Learning , pages 1467-1474, 2012. 3"
+    },
+    {
+      "ref_id": "9",
+      "raw": "- [9] Lucas Bourtoule, Varun Chandrasekaran, Christopher A Choquette-Choo, Hengrui Jia, Adelin Travers, Baiwu Zhang, David Lie, and Nicolas Papernot. Machine unlearning. In 2021 IEEE Symposium on Security and Privacy (SP) , pages 141-159. IEEE, 2021. 1"
+    },
+    {
+      "ref_id": "10",
+      "raw": "- [10] Matthew Chang, Theophile Gervet, Mukul Khanna, Sriram Yenamandra, Dhruv Shah, So Yeon Min, Kavit Shah, Chris Paxton, Saurabh Gupta, Dhruv Batra, et al. Goat: Go to any thing. arXiv preprint arXiv:2311.06430 , 2023. 3"
+    },
+    {
+      "ref_id": "11",
+      "raw": "- [11] Arslan Chaudhry, Puneet K Dokania, Thalaiyasingam Ajanthan, and Philip HS Torr. Riemannian walk for incremental learning: Understanding forgetting and intransigence. In Proceedings of the European conference on computer vision (ECCV) , pages 532-547, 2018. 6"
+    },
+    {
+      "ref_id": "12",
+      "raw": "- [12] Jinyin Chen, Longyuan Zhang, Haibin Zheng, Xueke Wang, and Zhaoyan Ming. Deeppoison: Feature transfer based stealthy poisoning attack for dnns. IEEE Transactions on Circuits and Systems II: Express Briefs , 68(7):2618-2622, 2021. 3"
+    },
+    {
+      "ref_id": "13",
+      "raw": "- [13] Matthias De Lange, Rahaf Aljundi, Marc Masana, Sarah Parisot, Xu Jia, Aleˇ s Leonardis, Gregory Slabaugh, and Tinne Tuytelaars. A continual learning survey: Defying forgetting in classification tasks. IEEE transactions on pattern analysis and machine intelligence , 44(7):3366-3385, 2021. 1, 2"
+    },
+    {
+      "ref_id": "14",
+      "raw": "- [14] Caccia et al. New insights on reducing abrupt representation change in online continual learning. In ICLR , 2021. 6"
+    },
+    {
+      "ref_id": "15",
+      "raw": "- [15] Huang et al. Unlearnable examples: Making personal data unexploitable. In ICLR , 2020. 6"
+    },
+    {
+      "ref_id": "16",
+      "raw": "- [16] Rolnick et al. Experience replay for continual learning. NeurIPS , 2019. 6"
+    },
+    {
+      "ref_id": "17",
+      "raw": "- [17] Radosavovic et al. Designing network design spaces. In CVPR , 2020. 8"
+    },
+    {
+      "ref_id": "18",
+      "raw": "- [18] Mehrdad Farajtabar, Navid Azizan, Alex Mott, and Ang Li. Orthogonal gradient descent for continual learning. In International Conference on Artificial Intelligence and Statistics , pages 3762-3773. PMLR, 2020. 2"
+    },
+    {
+      "ref_id": "19",
+      "raw": "- [19] Sebastian Farquhar and Yarin Gal. Towards robust evaluations of continual learning. arXiv preprint arXiv:1805.09733 , 2018. 2"
+    },
+    {
+      "ref_id": "20",
+      "raw": "- [20] Ji Feng, Qi-Zhi Cai, and Zhi-Hua Zhou. Learning to confuse: Generating training time adversarial data with auto-encoder. In Advances in Neural Information Processing Systems . Curran Associates, Inc., 2019. 3"
+    },
+    {
+      "ref_id": "21",
+      "raw": "- [21] Ji Feng, Qi-Zhi Cai, and Zhi-Hua Zhou. Learning to confuse: generating training time adversarial data with autoencoder. Advances in Neural Information Processing Systems , 32, 2019. 3, 6"
+    },
+    {
+      "ref_id": "22",
+      "raw": "- [22] Chelsea Finn, Pieter Abbeel, and Sergey Levine. Modelagnostic meta-learning for fast adaptation of deep networks. In International conference on machine learning , pages 1126-1135. PMLR, 2017. 3, 5"
+    },
+    {
+      "ref_id": "23",
+      "raw": "- [23] Luca Franceschi, Paolo Frasconi, Saverio Salzo, Riccardo Grazzi, and Massimiliano Pontil. Bilevel programming for hyperparameter optimization and meta-learning. In International conference on machine learning , pages 1568-1577. PMLR, 2018. 5"
+    },
+    {
+      "ref_id": "24",
+      "raw": "- [24] Matt Fredrikson, Somesh Jha, and Thomas Ristenpart. Model inversion attacks that exploit confidence information and basic countermeasures. In Proceedings of the 22nd ACM SIGSAC conference on computer and communications security , pages 1322-1333, 2015. 2, 3"
+    },
+    {
+      "ref_id": "25",
+      "raw": "- [25] Saurabh Garg, Mehrdad Farajtabar, Hadi Pouransari, Raviteja Vemulapalli, Sachin Mehta, Oncel Tuzel, Vaishaal Shankar, and Fartash Faghri. Tic-clip: Continual training of clip models. arXiv preprint arXiv:2310.16226 , 2023. 2"
+    },
+    {
+      "ref_id": "26",
+      "raw": "- [26] Jonas Geiping, Liam H Fowl, W. Ronny Huang, Wojciech Czaja, Gavin Taylor, Michael Moeller, and Tom Goldstein. Witches' brew: Industrial scale data poisoning via gradient matching. In International Conference on Learning Representations , 2021. 3"
+    },
+    {
+      "ref_id": "27",
+      "raw": "- [27] Gyojin Han, Jaehyun Choi, Hyeong Gwon Hong, and Junmo Kim. Data poisoning attack aiming the vulnerability of continual learning. In 2023 IEEE International Conference on Image Processing (ICIP) , pages 1905-1909. IEEE, 2023. 1"
+    },
+    {
+      "ref_id": "28",
+      "raw": "- [28] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep Residual Learning for Image Recognition. In Proceedings of 2016 IEEE Conference on Computer Vision and Pattern Recognition , pages 770-778. IEEE, 2016. 5"
+    },
+    {
+      "ref_id": "29",
+      "raw": "- [29] WRonny Huang, Jonas Geiping, Liam Fowl, Gavin Taylor, and Tom Goldstein. Metapoison: Practical general-purpose clean-label data poisoning. Advances in Neural Information Processing Systems , 33:12080-12091, 2020. 3, 5, 6"
+    },
+    {
+      "ref_id": "30",
+      "raw": "- [30] Sergey Ioffe and Christian Szegedy. Batch normalization: Accelerating deep network training by reducing internal covariate shift. In International conference on machine learning , pages 448-456. pmlr, 2015. 4"
+    },
+    {
+      "ref_id": "31",
+      "raw": "- [31] Matthew Jagielski, Alina Oprea, Battista Biggio, Chang Liu, Cristina Nita-Rotaru, and Bo Li. Manipulating machine learning: Poisoning attacks and countermeasures for regression learning. In 2018 IEEE symposium on security and privacy (SP) , pages 19-35. IEEE, 2018. 3"
+    },
+    {
+      "ref_id": "32",
+      "raw": "- [32] Siteng Kang, Zhan Shi, and Xinhua Zhang. Poisoning generative replay in continual learning to promote forgetting. In Proceedings of the 40th International Conference on Machine Learning , pages 15769-15785. PMLR, 2023. 1"
+    },
+    {
+      "ref_id": "33",
+      "raw": "- [33] Sanghwan Kim, Lorenzo Noci, Antonio Orvieto, and Thomas Hofmann. Achieving a better stability-plasticity trade-off via auxiliary networks in continual learning. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 11930-11939, 2023. 1, 5, 6"
+    },
+    {
+      "ref_id": "34",
+      "raw": "- [34] James Kirkpatrick, Razvan Pascanu, Neil Rabinowitz, Joel Veness, Guillaume Desjardins, Andrei A Rusu, Kieran Milan, John Quan, Tiago Ramalho, Agnieszka GrabskaBarwinska, et al. Overcoming catastrophic forgetting in neural networks. Proceedings of the national academy of sciences , 114(13):3521-3526, 2017. 2, 5, 6"
+    },
+    {
+      "ref_id": "35",
+      "raw": "- [35] Soheil Kolouri, Nicholas A Ketz, Andrea Soltoggio, and Praveen K Pilly. Sliced cramer synaptic consolidation for preserving deeply learned representations. In International Conference on Learning Representations , 2020. 2"
+    },
+    {
+      "ref_id": "36",
+      "raw": "- [36] Alex Krizhevsky, Vinod Nair, and Geoffrey Hinton. Cifar100 (canadian institute for advanced research). 5"
+    },
+    {
+      "ref_id": "37",
+      "raw": "- [37] Dhireesha Kudithipudi, Mario Aguilar-Simon, Jonathan Babb, Maxim Bazhenov, Douglas Blackiston, Josh Bongard, Andrew P Brna, Suraj Chakravarthi Raja, Nick Cheney, Jeff Clune, et al. Biological underpinnings for lifelong learning machines. Nature Machine Intelligence , 4(3):196-210, 2022. 1, 2"
+    },
+    {
+      "ref_id": "38",
+      "raw": "- [38] Ya Le and Xuan S. Yang. Tiny imagenet visual recognition challenge. 2015. 5"
+    },
+    {
+      "ref_id": "39",
+      "raw": "- [39] Huayu Li and Gregory Ditzler. Targeted data poisoning attacks against continual learning neural networks. In 2022 International Joint Conference on Neural Networks (IJCNN) , pages 1-8. IEEE, 2022. 1"
+    },
+    {
+      "ref_id": "40",
+      "raw": "- [40] Sen Lin, Li Yang, Deliang Fan, and Junshan Zhang. Trgp: Trust region gradient projection for continual learning. In International Conference on Learning Representations , 2022. 2"
+    },
+    {
+      "ref_id": "41",
+      "raw": "- [41] David Lopez-Paz and Marc'Aurelio Ranzato. Gradient episodic memory for continual learning. Advances in neural information processing systems , 30, 2017. 5"
+    },
+    {
+      "ref_id": "42",
+      "raw": "- [42] Aravindh Mahendran and Andrea Vedaldi. Understanding deep image representations by inverting them. In Proceedings of the IEEE conference on computer vision and pattern recognition , pages 5188-5196, 2015. 3"
+    },
+    {
+      "ref_id": "43",
+      "raw": "- [43] Arun Mallya and Svetlana Lazebnik. Packnet: Adding multiple tasks to a single network by iterative pruning. In Proceedings of the IEEE conference on Computer Vision and Pattern Recognition , pages 7765-7773, 2018. 2"
+    },
+    {
+      "ref_id": "44",
+      "raw": "- [44] Arun Mallya, Dillon Davis, and Svetlana Lazebnik. Piggyback: Adapting a single network to multiple tasks by learning to mask weights. In Proceedings of the European Conference on Computer Vision (ECCV) , pages 67-82, 2018. 2"
+    },
+    {
+      "ref_id": "45",
+      "raw": "- [45] Alexander Mordvintsev, Christopher Olah, and Mike Tyka. Deepdream-a code example for visualizing neural networks. Google Research , 2(5), 2015. 3, 4"
+    },
+    {
+      "ref_id": "46",
+      "raw": "- [46] Luis Mu˜ noz-Gonz´ alez, Battista Biggio, Ambra Demontis, Andrea Paudice, Vasin Wongrassamee, Emil C Lupu, and Fabio Roli. Towards poisoning of deep learning algorithms with back-gradient optimization. In Proceedings of the 10th ACM workshop on artificial intelligence and security , pages 27-38, 2017. 3"
+    },
+    {
+      "ref_id": "47",
+      "raw": "- [47] Saptarshi Nath, Christos Peridis, Eseoghene Ben-Iwhiwhu, Xinran Liu, Shirin Dora, Cong Liu, Soheil Kolouri, and Andrea Soltoggio. Sharing lifelong reinforcement learning knowledge via modulating masks. In Second Conference on Lifelong Learning Agents (CoLLAs) 2023 , 2023. 2"
+    },
+    {
+      "ref_id": "48",
+      "raw": "- [48] Ngoc-Bao Nguyen, Keshigeyan Chandrasegaran, Milad Abdollahzadeh, and Ngai-Man Cheung. Re-thinking model inversion attacks against deep neural networks. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 16384-16393, 2023. 3"
+    },
+    {
+      "ref_id": "49",
+      "raw": "- [49] David Rolnick, Arun Ahuja, Jonathan Schwarz, Timothy Lillicrap, and Gregory Wayne. Experience replay for continual learning. Advances in Neural Information Processing Systems , 32, 2019. 2"
+    },
+    {
+      "ref_id": "50",
+      "raw": "- [50] Mohammad Rostami, Soheil Kolouri, Praveen Pilly, and James McClelland. Generative continual concept learning. In Proceedings of the AAAI Conference on Artificial Intelligence , pages 5545-5552, 2020. 2"
+    },
+    {
+      "ref_id": "51",
+      "raw": "- [51] Andrei A Rusu, Neil C Rabinowitz, Guillaume Desjardins, Hubert Soyer, James Kirkpatrick, Koray Kavukcuoglu, Razvan Pascanu, and Raia Hadsell. Progressive neural networks. arXiv preprint arXiv:1606.04671 , 2016. 2"
+    },
+    {
+      "ref_id": "52",
+      "raw": "- [52] Gobinda Saha, Isha Garg, and Kaushik Roy. Gradient projection memory for continual learning. In International Conference on Learning Representations , 2020. 2"
+    },
+    {
+      "ref_id": "53",
+      "raw": "- [53] Jonathan Schwarz, Wojciech Czarnecki, Jelena Luketina, Agnieszka Grabska-Barwinska, Yee Whye Teh, Razvan Pascanu, and Raia Hadsell. Progress &amp; compress: A scalable framework for continual learning. In International Conference on Machine Learning , pages 4528-4537. PMLR, 2018. 2"
+    },
+    {
+      "ref_id": "54",
+      "raw": "- [54] Amirreza Shaban, Ching-An Cheng, Nathan Hatch, and Byron Boots. Truncated back-propagation for bilevel optimization. In The 22nd International Conference on Artificial Intelligence and Statistics , pages 1723-1732. PMLR, 2019. 5"
+    },
+    {
+      "ref_id": "55",
+      "raw": "- [55] Ali Shafahi, W Ronny Huang, Mahyar Najibi, Octavian Suciu, Christoph Studer, Tudor Dumitras, and Tom Goldstein. Poison frogs! targeted clean-label poisoning attacks on neural networks. Advances in neural information processing systems , 31, 2018. 3"
+    },
+    {
+      "ref_id": "56",
+      "raw": "- [56] Hanul Shin, Jung Kwon Lee, Jaehong Kim, and Jiwon Kim. Continual learning with deep generative replay. In Proceedings of the 31st International Conference on Neural Information Processing Systems , pages 2994-3003, 2017. 2"
+    },
+    {
+      "ref_id": "57",
+      "raw": "- [57] Muhammad Umer, Glenn Dawson, and Robi Polikar. Targeted forgetting and false memory formation in continual learners through adversarial backdoor attacks. In 2020 International Joint Conference on Neural Networks (IJCNN) , pages 1-8. IEEE, 2020. 1"
+    },
+    {
+      "ref_id": "58",
+      "raw": "- [58] Gido M Van de Ven and Andreas S Tolias. Generative replay with feedback connections as a general strategy for continual learning. arXiv preprint arXiv:1809.10635 , 2018. 2"
+    },
+    {
+      "ref_id": "59",
+      "raw": "- [59] Gido M Van de Ven, Hava T Siegelmann, and Andreas S Tolias. Brain-inspired replay for continual learning with artificial neural networks. Nature communications , 11(1):4069, 2020. 1, 2"
+    },
+    {
+      "ref_id": "60",
+      "raw": "- [60] Michael Veale, Reuben Binns, and Lilian Edwards. Algorithms that remember: model inversion attacks and data protection law. Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences , 376 (2133):20180083, 2018. 2, 3"
+    },
+    {
+      "ref_id": "61",
+      "raw": "- [61] Eli Verwimp, Shai Ben-David, Matthias Bethge, Andrea Cossu, Alexander Gepperth, Tyler L Hayes, Eyke H¨ ullermeier, Christopher Kanan, Dhireesha Kudithipudi, Christoph H Lampert, et al. Continual learning: Applications and the road forward. arXiv preprint arXiv:2311.11908 , 2023. 1"
+    },
+    {
+      "ref_id": "62",
+      "raw": "- [62] Oriol Vinyals, Charles Blundell, Timothy Lillicrap, koray kavukcuoglu, and Daan Wierstra. Matching networks for one shot learning. In Advances in Neural Information Processing Systems . Curran Associates, Inc., 2016. 5"
+    },
+    {
+      "ref_id": "63",
+      "raw": "- [63] Johannes von Oswald, Christian Henning, Jo˜ ao Sacramento, and Benjamin F Grewe. Continual learning with hypernetworks. arXiv preprint arXiv:1906.00695 , 2019. 2"
+    },
+    {
+      "ref_id": "64",
+      "raw": "- [64] Kuan-Chieh Wang, Yan Fu, Ke Li, Ashish Khisti, Richard Zemel, and Alireza Makhzani. Variational model inversion attacks. Advances in Neural Information Processing Systems , 34:9706-9719, 2021. 3"
+    },
+    {
+      "ref_id": "65",
+      "raw": "- [65] Liyuan Wang, Mingtian Zhang, Zhongfan Jia, Qian Li, Chenglong Bao, Kaisheng Ma, Jun Zhu, and Yi Zhong. Afec: Active forgetting of negative transfer in continual learning. Advances in Neural Information Processing Systems , 34: 22379-22391, 2021. 5, 6"
+    },
+    {
+      "ref_id": "66",
+      "raw": "- [66] Shipeng Wang, Xiaorong Li, Jian Sun, and Zongben Xu. Training networks in null space of feature covariance for continual learning. In Proceedings of the IEEE/CVF conference on Computer Vision and Pattern Recognition , pages 184-193, 2021. 2"
+    },
+    {
+      "ref_id": "67",
+      "raw": "- [67] Mitchell Wortsman, Vivek Ramanujan, Rosanne Liu, Aniruddha Kembhavi, Mohammad Rastegari, Jason Yosinski, and Ali Farhadi. Supermasks in superposition. Advances in Neural Information Processing Systems , 33:15173-15184, 2020. 2"
+    },
+    {
+      "ref_id": "68",
+      "raw": "- [68] Hongxu Yin, Pavlo Molchanov, Jose M Alvarez, Zhizhong Li, Arun Mallya, Derek Hoiem, Niraj K Jha, and Jan Kautz. Dreaming to distill: Data-free knowledge transfer via deepinversion. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 87158724, 2020. 3, 4"
+    },
+    {
+      "ref_id": "69",
+      "raw": "- [69] Friedemann Zenke, Ben Poole, and Surya Ganguli. Continual learning through synaptic intelligence. In International"
+    },
+    {
+      "ref_id": "70",
+      "raw": "14. Conference on Machine Learning , pages 3987-3995. PMLR, 2017. 2"
+    },
+    {
+      "ref_id": "71",
+      "raw": "- [70] Chen Zhu, W Ronny Huang, Hengduo Li, Gavin Taylor, Christoph Studer, and Tom Goldstein. Transferable cleanlabel poisoning attacks on deep neural nets. In International Conference on Machine Learning , pages 7614-7623. PMLR, 2019. 3"
+    }
+  ]
+}
