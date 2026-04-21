@@ -83,9 +83,9 @@ def extract_pdf_content(pdf_path: str) -> Dict:
 
     DocumentConverter, InputFormat, PdfFormatOption, PdfPipelineOptions = setup_docling()
 
-    # Configure pipeline to use GPU (cuda)
+    # Device: "cpu" | "cuda" (NVIDIA GPU) | "mps" (Mac Apple Silicon)
     pipeline_options = PdfPipelineOptions()
-    pipeline_options.accelerator_options.device = "cuda"  # change to 'mps' on Mac
+    pipeline_options.accelerator_options.device = "cpu"
     pipeline_options.do_ocr = True
 
     converter = DocumentConverter(
@@ -501,23 +501,21 @@ def summarize_text_with_sumy(text: str, sentences_count: int = 2) -> Optional[st
 
 def summarize_sections(sections: List[Dict]) -> List[Dict]:
     """
-    Summarise each section via the sumy extractive summariser.
+    Attach the full concatenated section text as `section_summary`.
+    No extractive summarisation — keep original content verbatim.
     Returns new dicts rather than mutating the originals in-place.
     """
     summarized: List[Dict] = []
 
     for idx, section in enumerate(sections, start=1):
-        print(f"\n[INFO] Summarising section {idx}/{len(sections)}: {section['section_title']}")
+        print(f"\n[INFO] Collecting full text for section {idx}/{len(sections)}: {section['section_title']}")
 
-        section_text = ' '.join(p["text"] for p in section.get("content", []))
+        full_text = '\n\n'.join(p["text"] for p in section.get("content", []))
 
-        if not section_text.strip():
+        if not full_text.strip():
             print(f"[WARNING] Empty section: {section['section_title']}")
-            summary = "Không có nội dung để tóm tắt."
-        else:
-            summary = summarize_text_with_sumy(section_text, sentences_count=2) or "Không thể tóm tắt."
 
-        updated = {**section, "section_summary": summary}
+        updated = {**section, "section_summary": full_text}
         summarized.append(updated)
 
     return summarized
