@@ -51,4 +51,4 @@ Notes:
 - If your Chroma server does not use tenant/database routing, the server falls back to a compatible HTTP client mode automatically.
 
 ## Run command
-uv run uvicorn embed.server:app --host 0.0.0.0 --port 8000
+uv run uvicorn embed_server.server:app --host 0.0.0.0 --port 8000

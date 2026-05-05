@@ -8,7 +8,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from embed.server import (  # noqa: E402
+from embed_server.server import (  # noqa: E402
     BATCH_SIZE,
     _get_collection,
     _get_model,
