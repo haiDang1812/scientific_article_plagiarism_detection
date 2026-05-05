@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import chromadb
-import uvicorn
 from chromadb.config import Settings
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -34,8 +33,11 @@ _client = None
 COLLECTION_NAME = "pipeline-summaries"
 CHROMA_MODE = os.getenv("CHROMA_MODE", "local").strip().lower()
 CHROMA_LOCAL_PATH = os.getenv("CHROMA_LOCAL_PATH", "./.chroma_db")
-CHROMA_CLOUD_TENANT = os.getenv("CHROMA_CLOUD_TENANT", "b2272094-71db-4499-8493-f2f113d76080")
-CHROMA_CLOUD_DATABASE = os.getenv("CHROMA_CLOUD_DATABASE", "testing")
+CHROMA_HTTP_HOST = os.getenv("CHROMA_HTTP_HOST", "localhost")
+CHROMA_HTTP_PORT = int(os.getenv("CHROMA_HTTP_PORT", "8001"))
+CHROMA_HTTP_SSL = os.getenv("CHROMA_HTTP_SSL", "false").strip().lower() == "true"
+CHROMA_CLOUD_TENANT = os.getenv("CHROMA_CLOUD_TENANT", "")
+CHROMA_CLOUD_DATABASE = os.getenv("CHROMA_CLOUD_DATABASE", "")
 CHROMA_CLOUD_API_KEY = os.getenv("CHROMA_CLOUD_API_KEY", "")
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 BATCH_SIZE = 64
@@ -72,7 +74,26 @@ class LiteLLMEmbedder:
         self._model = model
         self._api_key = api_key or None
         self._base_url = base_url or None
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+
+        # Try to load tokenizer matching the actual model name first.
+        # model string may be "openai/BAAI/bge-m3" or "huggingface/intfloat/e5-large" etc.
+        # Strip the provider prefix to get the HF repo id, then fall back to tokenizer_name.
+        hf_model_id = re.sub(r"^[^/]+/", "", model, count=1) if "/" in model else model
+        candidates = [hf_model_id, tokenizer_name]
+        self.tokenizer = None
+        for candidate in candidates:
+            try:
+                self.tokenizer = AutoTokenizer.from_pretrained(candidate)
+                if candidate != tokenizer_name:
+                    logger.info(f"LiteLLM tokenizer auto-detected from model id: {candidate}")
+                break
+            except Exception:
+                continue
+        if self.tokenizer is None:
+            raise ValueError(
+                f"Could not load tokenizer from '{hf_model_id}' or fallback '{tokenizer_name}'. "
+                "Set LITELLM_TOKENIZER to a valid HuggingFace tokenizer name."
+            )
 
     def encode(
         self,
@@ -85,8 +106,12 @@ class LiteLLMEmbedder:
             input=texts,
             api_key=self._api_key,
             api_base=self._base_url,
+            encoding_format="float",
         )
-        embeddings = np.array([item.embedding for item in response.data])
+        embeddings = np.array([
+            item["embedding"] if isinstance(item, dict) else item.embedding
+            for item in response.data
+        ])
         if normalize_embeddings:
             norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
             embeddings = embeddings / np.where(norms == 0, 1, norms)
@@ -98,25 +123,27 @@ class LiteLLMEmbedder:
 # ============================================================================
 
 
-def build_chroma_client(
-    mode: str,
-    local_path: str,
-    cloud_tenant: str,
-    cloud_database: str,
-    cloud_api_key: str,
-) -> chromadb.ClientAPI:
+def build_chroma_client(mode: str) -> chromadb.ClientAPI:
     if mode == "local":
         return chromadb.PersistentClient(
-            path=local_path,
+            path=CHROMA_LOCAL_PATH,
+            settings=Settings(anonymized_telemetry=False),
+        )
+
+    if mode == "http":
+        return chromadb.HttpClient(
+            host=CHROMA_HTTP_HOST,
+            port=CHROMA_HTTP_PORT,
+            ssl=CHROMA_HTTP_SSL,
             settings=Settings(anonymized_telemetry=False),
         )
 
     if mode == "cloud":
-        if not cloud_tenant:
+        if not CHROMA_CLOUD_TENANT:
             raise ValueError("CHROMA_CLOUD_TENANT is required when CHROMA_MODE='cloud'.")
-        if not cloud_database:
+        if not CHROMA_CLOUD_DATABASE:
             raise ValueError("CHROMA_CLOUD_DATABASE is required when CHROMA_MODE='cloud'.")
-        if not cloud_api_key:
+        if not CHROMA_CLOUD_API_KEY:
             raise ValueError("CHROMA_CLOUD_API_KEY is required when CHROMA_MODE='cloud'.")
 
         cloud_client_ctor = getattr(chromadb, "CloudClient", None)
@@ -125,17 +152,13 @@ def build_chroma_client(
                 "Installed chromadb package does not expose CloudClient. "
                 "Please update chromadb to a version that supports Chroma Cloud."
             )
+        return cloud_client_ctor(
+            tenant=CHROMA_CLOUD_TENANT,
+            database=CHROMA_CLOUD_DATABASE,
+            api_key=CHROMA_CLOUD_API_KEY,
+        )
 
-        try:
-            return cloud_client_ctor(
-                tenant=cloud_tenant,
-                database=cloud_database,
-                api_key=cloud_api_key,
-            )
-        except TypeError:
-            return cloud_client_ctor(cloud_tenant, cloud_database, cloud_api_key)
-
-    raise ValueError("CHROMA_MODE must be either 'local' or 'cloud'.")
+    raise ValueError("CHROMA_MODE must be 'local', 'http', or 'cloud'.")
 
 
 def _get_model():
@@ -158,13 +181,7 @@ def _get_model():
 def _get_collection():
     global _client
     if _client is None:
-        _client = build_chroma_client(
-            CHROMA_MODE,
-            CHROMA_LOCAL_PATH,
-            CHROMA_CLOUD_TENANT,
-            CHROMA_CLOUD_DATABASE,
-            CHROMA_CLOUD_API_KEY,
-        )
+        _client = build_chroma_client(CHROMA_MODE)
     return _client.get_or_create_collection(name=COLLECTION_NAME)
 
 
@@ -179,6 +196,14 @@ def normalize_text(text: str) -> str:
     text = text.replace("\x00", " ")
     text = re.sub(r"\s+", " ", text)
     return text.strip()
+
+
+def _trunc(text: str, max_bytes: int = 4096) -> str:
+    """Truncate string so its UTF-8 byte length stays within Chroma Cloud's limit."""
+    encoded = text.encode("utf-8")
+    if len(encoded) <= max_bytes:
+        return text
+    return encoded[:max_bytes].decode("utf-8", errors="ignore")
 
 
 def chunk_text(text: str, chunk_size: int, overlap: int, min_words: int) -> List[str]:
@@ -230,9 +255,11 @@ def chunk_text_by_tokens(
     if not sentences:
         return []
 
-    # Precompute token count per sentence to avoid repeated encoding
+    # Batch-encode all sentences at once instead of one-by-one
     sent_lengths = [
-        len(tokenizer.encode(s, add_special_tokens=False)) for s in sentences
+        len(ids) for ids in tokenizer(
+            sentences, add_special_tokens=False
+        )["input_ids"]
     ]
 
     chunks: List[str] = []
@@ -325,12 +352,12 @@ def build_records(record: Dict[str, Any]) -> List[tuple]:
 
             meta = {
                 "doc_id": doc_id,
-                "title": title,
-                "abstract": abstract,
+                "title": _trunc(title),
+                "abstract": _trunc(abstract),
                 "section_id": sec.get("section_id", ""),
-                "section_title": section_title,
+                "section_title": _trunc(section_title),
                 "chunk_index": idx,
-                "chunk_text": chunk_body,
+                "chunk_text": _trunc(chunk_body),
             }
             records.append((rec_id, text_to_embed, meta))
 
@@ -338,27 +365,35 @@ def build_records(record: Dict[str, Any]) -> List[tuple]:
 
 
 def _upsert_batch(collection, records: List[tuple], model, batch_size: int = 64) -> int:
-    total = 0
-    for idx in range(0, len(records), batch_size):
-        batch = records[idx : idx + batch_size]
-        ids = [r[0] for r in batch]
-        docs = [r[1] for r in batch]
-        metas = [r[2] for r in batch]
+    ids_all = [r[0] for r in records]
+    docs_all = [r[1] for r in records]
+    metas_all = [r[2] for r in records]
 
-        embeddings = model.encode(
+    # Embed in batches (HTTP round-trips), collect all embeddings first
+    all_embeddings: List[np.ndarray] = []
+    for idx in range(0, len(records), batch_size):
+        docs = docs_all[idx : idx + batch_size]
+        emb = model.encode(
             docs,
             show_progress_bar=False,
             normalize_embeddings=True,
             convert_to_numpy=True,
         )
+        all_embeddings.append(emb)
+        logger.debug(f"Embedded batch {idx // batch_size + 1}/{-(-len(records) // batch_size)}")
+
+    embeddings = np.concatenate(all_embeddings, axis=0)
+
+    chroma_max = collection._client.get_max_batch_size()
+    for idx in range(0, len(records), chroma_max):
         collection.upsert(
-            ids=ids,
-            documents=docs,
-            metadatas=metas,
-            embeddings=embeddings.tolist(),
+            ids=ids_all[idx : idx + chroma_max],
+            documents=docs_all[idx : idx + chroma_max],
+            metadatas=metas_all[idx : idx + chroma_max],
+            embeddings=embeddings[idx : idx + chroma_max].tolist(),
         )
-        total += len(batch)
-    return total
+
+    return len(records)
 
 
 # ============================================================================
@@ -561,7 +596,7 @@ async def upsert_txt(
             "section_id": "",
             "section_title": "",
             "chunk_index": idx,
-            "chunk_text": chunk,
+            "chunk_text": _trunc(chunk),
         }
         records.append((rec_id, chunk, meta))
 
@@ -703,81 +738,3 @@ def reset():
         return {"status": "ok", "message": "Collection cleared."}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
-
-
-def run_from_cli() -> None:
-    import argparse
-
-    global COLLECTION_NAME, CHROMA_MODE, CHROMA_LOCAL_PATH
-    global CHROMA_CLOUD_TENANT, CHROMA_CLOUD_DATABASE, CHROMA_CLOUD_API_KEY
-    global EMBEDDING_MODEL, BATCH_SIZE, CHUNK_SIZE, CHUNK_OVERLAP, MIN_CHUNK_WORDS
-    global EMBEDDING_BACKEND, LITELLM_API_KEY, LITELLM_BASE_URL, LITELLM_MODEL, LITELLM_TOKENIZER
-
-    parser = argparse.ArgumentParser(description="Embedding FastAPI Server")
-    parser.add_argument("--host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--reload", action="store_true")
-    parser.add_argument("--chroma-mode", choices=["local", "cloud"], default=CHROMA_MODE)
-    parser.add_argument("--chroma-path", default=CHROMA_LOCAL_PATH)
-    parser.add_argument("--chroma-cloud-tenant", default=CHROMA_CLOUD_TENANT)
-    parser.add_argument("--chroma-cloud-database", default=CHROMA_CLOUD_DATABASE)
-    parser.add_argument("--chroma-cloud-api-key", default=CHROMA_CLOUD_API_KEY)
-    parser.add_argument("--collection", default=COLLECTION_NAME)
-    parser.add_argument("--model", default=EMBEDDING_MODEL)
-    parser.add_argument("--batch-size", type=int, default=BATCH_SIZE)
-    parser.add_argument("--chunk-size", type=int, default=CHUNK_SIZE)
-    parser.add_argument("--chunk-overlap", type=int, default=CHUNK_OVERLAP)
-    parser.add_argument("--min-chunk-words", type=int, default=MIN_CHUNK_WORDS)
-    parser.add_argument("--embedding-backend", choices=["sentence_transformers", "litellm"], default=EMBEDDING_BACKEND)
-    parser.add_argument("--litellm-api-key", default=LITELLM_API_KEY)
-    parser.add_argument("--litellm-base-url", default=LITELLM_BASE_URL)
-    parser.add_argument("--litellm-model", default=LITELLM_MODEL)
-    parser.add_argument("--litellm-tokenizer", default=LITELLM_TOKENIZER)
-    args = parser.parse_args()
-
-    COLLECTION_NAME = args.collection
-    CHROMA_MODE = args.chroma_mode
-    CHROMA_LOCAL_PATH = args.chroma_path
-    CHROMA_CLOUD_TENANT = args.chroma_cloud_tenant
-    CHROMA_CLOUD_DATABASE = args.chroma_cloud_database
-    CHROMA_CLOUD_API_KEY = args.chroma_cloud_api_key
-    EMBEDDING_MODEL = args.model
-    BATCH_SIZE = args.batch_size
-    CHUNK_SIZE = args.chunk_size
-    CHUNK_OVERLAP = args.chunk_overlap
-    MIN_CHUNK_WORDS = args.min_chunk_words
-    EMBEDDING_BACKEND = args.embedding_backend
-    LITELLM_API_KEY = args.litellm_api_key
-    LITELLM_BASE_URL = args.litellm_base_url
-    LITELLM_MODEL = args.litellm_model
-    LITELLM_TOKENIZER = args.litellm_tokenizer
-
-    logger.info("=" * 60)
-    logger.info("EMBEDDING SERVER")
-    logger.info("=" * 60)
-    logger.info(f"  Backend      : {EMBEDDING_BACKEND}")
-    if EMBEDDING_BACKEND == "litellm":
-        logger.info(f"  LiteLLM model: {LITELLM_MODEL}")
-        logger.info(f"  LiteLLM URL  : {LITELLM_BASE_URL}")
-    else:
-        logger.info(f"  Model        : {EMBEDDING_MODEL}")
-    logger.info(f"  Collection   : {COLLECTION_NAME}")
-    logger.info(f"  Chroma mode  : {CHROMA_MODE}")
-    if CHROMA_MODE == "local":
-        logger.info(f"  ChromaDB     : {CHROMA_LOCAL_PATH}")
-    else:
-        logger.info(f"  Tenant/DB    : {CHROMA_CLOUD_TENANT}/{CHROMA_CLOUD_DATABASE}")
-    logger.info(f"  Chunking     : size={CHUNK_SIZE}, overlap={CHUNK_OVERLAP}, min_words={MIN_CHUNK_WORDS}")
-    logger.info(f"  Server       : http://{args.host}:{args.port}")
-    logger.info("=" * 60)
-
-    uvicorn.run(
-        "embed.server:app",
-        host=args.host,
-        port=args.port,
-        reload=args.reload,
-    )
-
-
-if __name__ == "__main__":
-    run_from_cli()
