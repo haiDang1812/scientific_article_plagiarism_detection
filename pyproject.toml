@@ -1,11 +1,18 @@
 [project]
 name = "massivedata"
 version = "0.1.0"
-description = "Add your description here"
+description = "Scientific Article Plagiarism Detection — modular pipeline for PDF crawling, embedding, EDA, parsing, and semantic search."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = "==3.11.*"
 dependencies = [
-    "bs4>=0.0.2",
-    "requests>=2.32.5",
-    "tqdm>=4.67.3",
+    "chromadb>=0.4.0",
+    "sentence-transformers>=2.2.0",
+    "pymupdf>=1.23.0",
+    "fastapi>=0.121.0",
+    "uvicorn>=0.38.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "python-multipart>=0.0.26",
+    "loguru>=0.7.3",
+    "litellm>=1.83.14",
 ]
